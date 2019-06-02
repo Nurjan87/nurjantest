@@ -1,0 +1,30 @@
+---
+- name: Install and configure nrpe agent
+  hosts: nrpe
+  become: yes
+  become_method: sudo
+  tasks: 
+    - name: Download and unzip nrpe agent
+      unarchive:
+        src: https://assets.nagios.com/downloads/nagiosxi/agents/linux-nrpe-agent.tar.gz
+        dest: /tmp
+        remote_src: yes
+    - name: install expect
+      yum:
+        name: expect
+        state: present
+    - name: Run expect to wait for a successful PXE boot via out-of-band CIMC
+      shell: |
+        spawn /tmp/linux-nrpe-agent/fullinstall
+
+        expect "Do you want to continue\? \[Y/n\]"
+        send "y\n"
+
+        expect "Allow from:  "
+        send "35.202.211.198 \n"
+
+
+        exit 0
+      args:
+        chdir: /tmp/linux-nrpe-agent/
+        executable: /usr/bin/expect
